@@ -110,17 +110,21 @@ export default class collectionFilter {
         }
         return false;
     }
+
+    equal(ox, oy) {
+        let equal = true;
+        Object.keys(ox).every(function (member) {
+            if (ox[member] != oy[member]) {
+                equal = false;
+                return false;
+            }
+        })
+        return equal;
+    }
     exist(collection, object) {
         if (collection.length > 0) {
             for (let item of collection) {
-                let equal = true;
-                Object.keys(item).every(function (member) {
-                    if (item[member] != object[member]) {
-                        equal = false;
-                        return false;
-                    }
-                })
-                if (equal) return true;
+                if (this.equal(item, object)) return true;
             }
             return false;
         }
@@ -134,9 +138,7 @@ export default class collectionFilter {
                 for (let field of this.fields) {
                     subItem[field] = item[field];
                 }
-                if (!this.exist(subCollection, subItem)) {
-                    subCollection.push(subItem);
-                }
+                subCollection.push(subItem);
             }
             return subCollection;
         } else
@@ -150,7 +152,7 @@ export default class collectionFilter {
                     filteredCollection.push(item);
             }
         } else
-            filteredCollection = collection;
+            filteredCollection = [...collection];
         return filteredCollection;
     }
     compareNum(x, y) {
@@ -186,8 +188,40 @@ export default class collectionFilter {
     sort() {
         this.filteredCollection.sort((a, b) => this.compare(a, b));
     }
+    flushDuplicates(collection) {
+        let index = 0;
+        let lastObj = null;
+        let filteredCollection = [];
+        while (index < collection.length) {
+            if (index == 0) {
+                filteredCollection.push(collection[index]);
+                lastObj = collection[index];
+                index++;
+            }
+            while (index < collection.length && this.equal(collection[index], lastObj)) index++;
+            if (index < collection.length) {
+                filteredCollection.push(collection[index]);
+                lastObj = collection[index];
+                index++;
+            }
+        }
+        return filteredCollection;
+    }
+
     get() {
-        this.filteredCollection = this.keepFields(this.findByKeys(this.collection));
+        this.filteredCollection = this.findByKeys(this.collection);
+        if (this.fields.length > 0) {
+            this.filteredCollection = this.keepFields(this.filteredCollection);
+            this.prevSortFields = [...this.sortFields];
+            this.sortFields = [];
+            this.fields.forEach(fields => {
+                this.setSortFields(fields);
+            });
+            this.filteredCollection.sort((a, b) => this.compare(a, b));
+            this.filteredCollection = this.flushDuplicates(this.filteredCollection);
+            this.sortFields = this.prevSortFields;
+        }
+     
         if (this.sortFields.length > 0)
             this.sort();
 
