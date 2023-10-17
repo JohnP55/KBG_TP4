@@ -3,22 +3,25 @@ let contentScrollPosition = 0;
 
 let offset = 0;
 let previousScrollPosition = 0;
-let rowHeight = 26.75;
-let limit = getLimit()
+let rowHeight = 28 - 1;
+let limit = getLimit();
+let listMode = true;
 Init_UI();
 
 function getLimit() {
     // estimate the value of limit according to height of content
-    return Math.round($("#content").height() / rowHeight);
+    return Math.round($("#content").innerHeight() / rowHeight);
 }
 function Init_UI() {
-    renderWords();
+    renderWords(true);
     $('#createWord').on("click", async function () {
         saveContentScrollPosition();
         renderCreateWordForm();
     });
     $('#abort').on("click", async function () {
-        renderWords();
+        listMode = true;
+        eraseContent();
+        renderWords(true);
     });
     $('#aboutCmd').on("click", function () {
         renderAbout();
@@ -35,35 +38,23 @@ function Init_UI() {
             $(window).trigger('resizeend');
         }, 250);
     }).on('resizestart', function () {
+        resizeTimer = true;
         console.log('Started resizing the window');
     }).on('resizeend', function () {
         console.log('Done resizing the window');
         limit = getLimit();
-        let currentOffset = offset;
-        $('#content').empty();
-        for (offset = 0; offset <= currentOffset; offset++) {
-            renderWords()
-        }
-        offset = currentOffset;
-    });
-   
-    $("#content").scroll(function () {
-        if ($("#content").scrollTop() + $("#content").innerHeight() >= $("#wordsList").height()) {
-            limit+= limit;
-            console.log($("#content").scrollTop(), $("#content").innerHeight(), $("#wordsList").height(), limit);
-            $("#content").scrollTop($("#content").scrollTop() + $("#content").innerHeight());
-            renderWords();
-        }
+        if (listMode) renderWords(true);
     });
 }
 
 function renderAbout() {
+    listMode = false;
     saveContentScrollPosition();
     eraseContent();
     $("#createWord").hide();
     $("#abort").show();
     $("#actionTitle").text("À propos...");
-    $("#content").append(
+    $("#wordsList").append(
         $(`
             <div class="aboutContainer">
                 <h2>Gestionnaire de words</h2>
@@ -81,21 +72,42 @@ function renderAbout() {
             </div>
         `))
 }
-async function renderWords() {
-    let queryString = "?fields=Val,Def&limit=" + limit + "&offset=" + offset;
-    showWaitingGif();
+async function renderWords(refresh = false) {
+    let wordsCount = limit * (offset + 1);
+    let queryString =
+        refresh
+            ? "?fields=Val,Def&limit=" + wordsCount + "&offset=" + 0
+            : "?fields=Val,Def&limit=" + limit + "&offset=" + offset;
+
     $("#actionTitle").text("Liste des mots");
     $("#createWord").show();
     $("#abort").hide();
     let words = await API_GetWords(queryString);
-    eraseContent();
+    if (refresh) eraseContent();
     if (words !== null) {
+        $("#content").off();
         words.forEach(word => {
             $("#wordsList").append(renderWord(word));
         });
+
     } else {
         renderError("Service introuvable");
     }
+    if (refresh)
+        restoreContentScrollPosition();
+
+    $("#content").on("scroll", function () {
+        if (listMode) {
+            if ($("#content").scrollTop() + $("#content").innerHeight() > ($("#wordsList").height() - rowHeight)) {
+                $("#content").off();
+                offset++;
+                console.log(offset);
+                renderWords();
+                $("#content").scrollTop($("#content").scrollTop() + $("#content").innerHeight());
+            }
+        }
+    });
+
 }
 function showWaitingGif() {
     eraseContent();
@@ -105,13 +117,16 @@ function eraseContent() {
     $("#wordsList").empty();
 }
 function saveContentScrollPosition() {
-    contentScrollPosition = $("#content")[0].scrollTop;
+    contentScrollPosition = $("#content").scrollTop();
+    console.log("Save SP", $("#content").scrollTop());
 }
 function restoreContentScrollPosition() {
-    $("#content")[0].scrollTop = contentScrollPosition;
+    $("#content").scrollTop(contentScrollPosition);
+    console.log("Restore SP", $("#content").scrollTop());
 }
 function renderError(message) {
     eraseContent();
+    listMode = false;
     $("#wordsList").append(
         $(`
             <div class="errorContainer">
@@ -121,6 +136,7 @@ function renderError(message) {
     );
 }
 function renderCreateWordForm() {
+    listMode = false;
     renderWordForm();
 }
 async function renderEditWordForm(id) {

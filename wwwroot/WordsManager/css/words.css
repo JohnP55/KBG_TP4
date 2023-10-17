@@ -2,3 +2,8 @@
     font-size: large;
     font-weight: bold;
 }
+
+.wordContainer {
+    height: 28px;
+    padding-left: 10px;
+}
