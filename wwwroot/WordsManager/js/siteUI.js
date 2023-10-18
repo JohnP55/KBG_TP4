@@ -23,13 +23,11 @@ function Init_UI() {
         renderAbout();
     });
     $("#searchKey").on("change", () => {
-        previousScrollPosition = 0;
-        $("#content").scrollTop(0);
-        offset = 0;
-        endOfData = false;
-        search = $("#searchKey").val();
-        renderWords(true);
+       doSearch();
     })
+    $('#doSearch').on('click', () => {
+        doSearch();
+     })
     //// Handling window resize
     var resizeTimer = null;
     var resizeEndTriggerDelai = 250;
@@ -52,10 +50,18 @@ function Init_UI() {
         }
     });
 }
-
+function doSearch() {
+    console.log('searching');
+    previousScrollPosition = 0;
+    $("#content").scrollTop(0);
+    offset = 0;
+    endOfData = false;
+    search = $("#searchKey").val();
+    renderWords(true);
+}
 function renderAbout() {
     eraseContent();
-    $(".search").hide();
+    $("#search").hide();
     $("#abort").show();
     $("#actionTitle").text("À propos...");
     $("#content").append(
@@ -80,9 +86,9 @@ function renderAbout() {
 async function renderWords(refresh = false) {
     let wordsCount = limit * (offset + 1);
     let queryString = refresh ? "?fields=Val,Def&limit=" + wordsCount + "&offset=" + 0 : "?fields=Val,Def&limit=" + limit + "&offset=" + offset;
-    if (search != "") queryString += "&Val=" + search + "*";
+    if (search != "") queryString += "&Val=" + search;
     $("#actionTitle").text("Mots");
-    $(".search").show();
+    $("#search").show();
     $("#abort").hide();
 
     if (!endOfData) {
@@ -147,7 +153,7 @@ function renderError(message) {
 function renderWord(word) {
     return $(`
      <div class="wordRow" word_id=${word.Id}">
-        <div class="wordContainer noselect">
+        <div class="wordContainer ">
             <div class="wordLayout">
                  <div></div>
                  <div class="wordInfo">
