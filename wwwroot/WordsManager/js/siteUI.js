@@ -5,8 +5,8 @@ let offset = 0;
 let previousScrollPosition = 0;
 let rowHeight = 28 - 1;
 let limit = getLimit();
-let listMode = true;
 let search = "";
+let endOfData = false;
 
 Init_UI();
 
@@ -16,15 +16,17 @@ function getLimit() {
 }
 function Init_UI() {
     renderWords(true);
-
     $('#abort').on("click", async function () {
-        listMode = true;
         renderWords(true);
     });
     $('#aboutCmd').on("click", function () {
         renderAbout();
     });
     $("#searchKey").on("change", () => {
+        previousScrollPosition = 0;
+        $("#content").scrollTop(0);
+        offset = 0;
+        endOfData = false;
         search = $("#searchKey").val();
         renderWords(true);
     })
@@ -52,19 +54,19 @@ function Init_UI() {
 }
 
 function renderAbout() {
-    listMode = false;
     eraseContent();
-    $("#createWord").hide();
+    $(".search").hide();
     $("#abort").show();
     $("#actionTitle").text("À propos...");
     $("#content").append(
         $(`
             <div class="aboutContainer">
-                <h2>Gestionnaire de words</h2>
+                <h2>Dictionnaire de mots</h2>
                 <hr>
                 <p>
-                    Petite application de gestion de words à titre de démonstration
-                    d'interface utilisateur monopage réactive.
+                    Petite application à titre de démonstration
+                    d'interface utilisateur monopage réactive avec 
+                    défilement infinie.                    
                 </p>
                 <p>
                     Auteur: Nicolas Chourot
@@ -78,32 +80,38 @@ function renderAbout() {
 async function renderWords(refresh = false) {
     let wordsCount = limit * (offset + 1);
     let queryString = refresh ? "?fields=Val,Def&limit=" + wordsCount + "&offset=" + 0 : "?fields=Val,Def&limit=" + limit + "&offset=" + offset;
-    if (search != "")
-        queryString += "&Val=" + search + "*";
-    $("#actionTitle").text("Liste des mots");
-    $("#createWord").show();
+    if (search != "") queryString += "&Val=" + search + "*";
+    $("#actionTitle").text("Mots");
+    $(".search").show();
     $("#abort").hide();
 
-    let words = await API_GetWords(queryString);
-    if (words !== null) {
-        if (refresh) {
-            saveContentScrollPosition();
-            eraseContent();
-            $("#content").append($("<div id='wordsList'>"));
-        }
-        $("#content").off();
-        words.forEach(word => {
-            $("#wordsList").append(renderWord(word));
-        });
-        $("#content").on("scroll", function () {
-            if ($("#content").scrollTop() + $("#content").innerHeight() > ($("#wordsList").height() - rowHeight)) {
-                $("#content").off();
-                offset++;
-                console.log(offset);
-                renderWords();
-                $("#content").scrollTop($("#content").scrollTop() + $("#content").innerHeight());
+    if (!endOfData) {
+        let words = await API_GetWords(queryString);
+        if (words !== null) {
+            if (refresh) {
+                saveContentScrollPosition();
+                eraseContent();
+                $("#content").append($("<div id='wordsList'>"));
             }
-        });
+            if (words.length > 0) {
+                $("#content").off();
+                words.forEach(word => {
+                    $("#wordsList").append(renderWord(word));
+                });
+                $("#wordsList").append($("<hr>"));
+                $("#content").on("scroll", function () {
+                    if ($("#content").scrollTop() + $("#content").innerHeight() > ($("#wordsList").height() - rowHeight)) {
+                        $("#content").off();
+                        offset++;
+                        console.log(offset);
+                        renderWords();
+                        $("#content").scrollTop($("#content").scrollTop() + $("#content").innerHeight());
+                    }
+                });
+            } else {
+                endOfData = true;
+            }
+        }
     } else {
         renderError("Service introuvable");
     }
@@ -127,7 +135,6 @@ function restoreContentScrollPosition() {
 }
 function renderError(message) {
     eraseContent();
-    listMode = false;
     $("#content").append(
         $(`
             <div class="errorContainer">

@@ -11,4 +11,18 @@
 #searchKey {
     margin:0px !important;
     padding-left: 4px;
+   
+}
+#abort {
+    margin-left:160px;
+}
+.search {
+    display:grid;
+    width: 190px;
+    grid-template-columns: 150px 30px;
+    align-items: center;
+}
+
+.wordRow {
+    scroll-snap-align: start;
 }
