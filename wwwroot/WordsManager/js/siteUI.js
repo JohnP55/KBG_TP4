@@ -69,6 +69,7 @@ function renderAbout() {
             <div class="aboutContainer">
                 <h2>Dictionnaire de mots</h2>
                 <hr>
+                <br>
                 <p>
                     Petite application à titre de démonstration
                     d'interface utilisateur monopage réactive avec 
@@ -106,12 +107,12 @@ async function renderWords(refresh = false) {
                 });
                 $("#wordsList").append($("<hr>"));
                 $("#content").on("scroll", function () {
+                    console.log($("#content").scrollTop())
                     if ($("#content").scrollTop() + $("#content").innerHeight() > ($("#wordsList").height() - rowHeight)) {
                         $("#content").off();
                         offset++;
                         console.log(offset);
                         renderWords();
-                        $("#content").scrollTop($("#content").scrollTop() + $("#content").innerHeight());
                     }
                 });
             } else {
