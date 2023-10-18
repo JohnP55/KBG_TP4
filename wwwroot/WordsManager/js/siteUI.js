@@ -23,11 +23,11 @@ function Init_UI() {
         renderAbout();
     });
     $("#searchKey").on("change", () => {
-       doSearch();
+        doSearch();
     })
     $('#doSearch').on('click', () => {
         doSearch();
-     })
+    })
     //// Handling window resize
     var resizeTimer = null;
     var resizeEndTriggerDelai = 250;
@@ -45,7 +45,7 @@ function Init_UI() {
     }).on('resizeend', function () {
         console.log('resize end');
         if ($('#wordsList') != null) {
-            limit = getLimit()
+            limit = getLimit();
             renderWords(true);
         }
     });
@@ -149,7 +149,6 @@ function renderError(message) {
         `)
     );
 }
-
 function renderWord(word) {
     return $(`
      <div class="wordRow" word_id=${word.Id}">
@@ -158,11 +157,9 @@ function renderWord(word) {
                  <div></div>
                  <div class="wordInfo">
                     <span class="word">${word.Val}</span>
-                    <span class="wordDef">${word.Def}</span>
-                   
+                    <span class="wordDef">${word.Def}</span>                   
                 </div>
-            </div>
-           
+            </div>      
         </div>
     </div>           
     `);
