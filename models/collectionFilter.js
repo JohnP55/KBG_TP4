@@ -113,7 +113,7 @@ export default class collectionFilter {
 
     equal(ox, oy) {
         let equal = true;
-        Object.keys(ox).every(function (member) {
+        Object.keys(ox).forEach(function (member) {
             if (ox[member] != oy[member]) {
                 equal = false;
                 return false;
