@@ -6,8 +6,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export default class Response {
-    constructor(res) {
-        this.res = res;
+    constructor(HttpContext) {
+        this.HttpContext = HttpContext;
+        this.res = HttpContext.res;
         this.errorContent = "";
     }
     status(number, errorMessage = '') {
