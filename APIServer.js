@@ -7,6 +7,7 @@ import MiddlewaresPipeline from './middlewaresPipeline.js';
 import * as router from './router.js';
 import { handleCORSPreflight } from './cors.js';
 import { handleStaticResourceRequest } from './staticResourcesServer.js';
+import CachedRequestsManager from "./models/CachedRequestsManager.js";
 export default class APIServer {
     constructor(port = process.env.PORT || 5000) {
         this.port = port;
@@ -24,6 +25,7 @@ export default class APIServer {
 
         // API middlewares
 
+        this.middlewaresPipeline.add(CachedRequestsManager.get);
         this.middlewaresPipeline.add(router.API_EndPoint);
     }
     async handleHttpRequest(req, res) {
@@ -39,11 +41,11 @@ export default class APIServer {
     }
     startupMessage() {
         log(FgGreen, "************************************");
-        log(FgGreen, "* API SERVER - version beta - 1.92 *");
+        log(FgGreen, "* API SERVER - version beta - 1.93 *");
         log(FgGreen, "************************************");
         log(FgGreen, "* Author: Nicolas Chourot          *");
         log(FgGreen, "* Lionel-Groulx College            *");
-        log(FgGreen, "* Release date: october 2023       *");
+        log(FgGreen, "* Release date: november 2023      *");
         log(FgGreen, "************************************");
         log(FgWhite, BgGreen, `HTTP Server running on port ${this.port}...`);
         this.showMemoryUsage();
